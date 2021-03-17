@@ -30,17 +30,21 @@ public class CloudflareIpUpdater {
 
 	@Schedule(minute = "*/10", hour = "*", persistent = false)
 	public void start() {
-		String currentIp = NetworkUtils.getCurrentIp();
-		if (currentIp == null) {
-			LOG.warning("Failed to get current ip");
-		} else if (currentIp.equals(previousIp)) {
-			LOG.info("No update required, ip is still " + currentIp);
-		} else {
-			LOG.info(() -> String.format("Previous ip was %s, new one is %s, updating", previousIp, currentIp));
-			doUpdate(currentIp);
-			LOG.info("Successfully updated cloudflare dns records");
+		try {
+			String currentIp = NetworkUtils.getCurrentIp();
+			if (currentIp == null) {
+				LOG.warning("Failed to get current ip");
+			} else if (currentIp.equals(previousIp)) {
+				LOG.info("No update required, ip is still " + currentIp);
+			} else {
+				LOG.info(() -> String.format("Previous ip was %s, new one is %s, updating", previousIp, currentIp));
+				doUpdate(currentIp);
+				LOG.info("Successfully updated cloudflare dns records");
+			}
+			this.previousIp = currentIp;
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		this.previousIp = currentIp;
 	}
 
 	private void doUpdate(String ip) {
